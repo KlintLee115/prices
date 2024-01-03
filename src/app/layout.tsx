@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
 
-  const [isMapsLoaded, setMapsLoaded] = useState(true);
+  const [isMapsLoaded, setMapsLoaded] = useState(false);
 
   return (
     <html lang="en">
