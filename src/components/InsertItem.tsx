@@ -50,7 +50,7 @@ export default function InsertItem() {
         const lng = location?.lng()
         const lat = location?.lat()
 
-        const response = await fetch('/api/insertitem/', {
+        const response = await fetch('/api/', {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

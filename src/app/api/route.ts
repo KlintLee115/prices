@@ -1,12 +1,7 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import clientPromise from "@/lib/mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 const uri = process.env.MONGODB_URI
-let client: MongoClient | undefined
-
-type CoordinatesType = {
-    lat?: number,
-    lng?: number
-}
 
 type PriceType = {
     location: {
@@ -14,35 +9,34 @@ type PriceType = {
     }
 };
 
+type ItemsType = {
+    products: string;
+    price: number;
+    address: string;
+    lat: number;
+    lng: number;
+    dateStr: string
+}
+
 async function GetCollection() {
     // Connect the client to the server	(optional starting in v4.7)
-    if (!client) {
-        client = new MongoClient('mongodb+srv://klintmongo:Motherorange1@prices.o0nfqfl.mongodb.net/', {
-            serverApi: {
-                version: ServerApiVersion.v1,
-                strict: true,
-                deprecationErrors: true,
-            }
-        });
-        await client.connect();
-    }
+    const client = await clientPromise
     // Send a ping to confirm a successful connection
     const db = client.db("prices")
     const collection = db.collection("prices");
-
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     return collection
 
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
 
     try {
         const radiusInKilometers = 10
 
-        const filters = await req.json()
-        const { lat, lng }: CoordinatesType = filters
+        const { searchParams } = new URL(req.url)
+        const lat = Number(searchParams.get('lat'))
+        const lng = Number(searchParams.get('lng'))
 
         // Initialize an empty query object
 
@@ -51,15 +45,18 @@ export async function POST(req: Request) {
         }
 
         // Connect to the database
-        const potentialMatches = await(await GetCollection()).find({}).toArray();
+        const potentialMatches = await (await GetCollection()).find({}).toArray();
+        console.log(potentialMatches)
 
         const matches = potentialMatches.flatMap(object =>
-            object.prices.filter((item: { location: { coordinates: [number, number]; }; }) => {
+            object.prices.filter((item: PriceType) => {
                 const [targetlong, targetLat] = item.location.coordinates;
                 const distance = calculateDistance(lat, lng, targetlong, targetLat);
                 return distance <= radiusInKilometers * 10;
             })
         );
+
+        console.log(matches)
 
 
         return new Response(JSON.stringify(matches))
@@ -70,6 +67,40 @@ export async function POST(req: Request) {
     }
 }
 
+export async function POST(req: Request) {
+    const client = (await clientPromise) as MongoClient
+    try {
+        const db = client.db("prices");
+        const collection = db.collection('prices')
+
+        const items = await req.json()
+        const { products, price, address, lat, lng, dateStr }: ItemsType = items
+
+        const updateData = {
+            id: new ObjectId(),
+            address: address,
+            price: price, // You can replace this with the actual price you want to set
+            product: products,
+            date: new Date(dateStr),
+            coordinates: [lng, lat]
+        }
+
+        await collection.updateOne(
+            { _id: new ObjectId('658ea1cdaad35de3bc68d19f') },
+            { $push: { prices: updateData } }
+        );
+
+        //   // Close the database connection
+        return new Response(JSON.stringify({ success: 'good' }))
+    }
+    catch (err) {
+        console.log(err)
+        return new Response(JSON.stringify({ error: err }))
+    }
+    finally {
+        await client.close()
+    }
+}
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371000; // metres
     const v1 = lat1 * Math.PI / 180; // φ, λ in radians

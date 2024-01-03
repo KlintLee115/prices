@@ -25,12 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     async function getData() {
-      const response = await fetch('/api/getitem', {
-        method: "POST",
-        body: JSON.stringify({
-          lat: lat, lng: lng
-        })
-      });
+      const response = await fetch(`/api/?lat=${lat}&lng=${lng}`);
       const data: any = await response.json();
 
       if (data.item !== null) {
