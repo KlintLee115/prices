@@ -9,11 +9,30 @@ type SearchItemsProp = {
     product?: string;
 }
 
+export async function getCurrentLocation(): Promise<{ lat: number, lng: number }> {
+    return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                resolve(pos);
+            },
+            error => {
+                reject(error); // Handle any errors that may occur
+            }
+        );
+    });
+}
+
 export default function SearchItem(
     {
         lat, lng, product
     }: SearchItemsProp
 ) {
+    const geocoder = new google.maps.Geocoder();
+
     const locationAutoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const locationInputRef = useRef<HTMLInputElement | null>(null);
     const router = useRouter()
@@ -22,16 +41,14 @@ export default function SearchItem(
 
     const searchParams = new URLSearchParams(useSearchParams())
 
-    async function reversedGeocodeLatLng(
-        geocoder: google.maps.Geocoder,
-    ): Promise<string> {
+    async function reversedGeocode(lat: number, lng: number): Promise<string> {
         const latlng = {
-            lat: lat as number,
-            lng: lng as number,
+            lat: lat,
+            lng: lng,
         };
 
         if (!(lat && lng)) {
-            throw "Both must be defined, or both are undefined."
+            throw "Both must be defined, or both undefined."
         }
         try {
             const { formatted_address } = (await geocoder.geocode({ location: latlng })).results[0] || {};
@@ -39,17 +56,14 @@ export default function SearchItem(
         } catch (e) {
             return "Geocoder failed due to: " + e;
         }
-
     }
 
     useEffect(() => {
         if (!locationInputRef.current) return;
 
-        const geocoder = new google.maps.Geocoder();
-
         if (lat && lng) {
             (async () => {
-                const address = await reversedGeocodeLatLng(geocoder)
+                const address = await reversedGeocode(lat, lng)
                 setLocation(address)
             })()
         }
@@ -87,25 +101,34 @@ export default function SearchItem(
     }, []);
 
     return (
-        <div className="border border-black p-10 pb-5">
+        <div className="border border-black px-10 py-7">
             <h1>Search for items</h1>
-            <div className="mt-5 flex gap-4 items-center">
-                <label>Location: </label>
-                <input ref={locationInputRef}
-                    onChange={e => setLocation(e.target.value)}
-                    value={location} type="text" className="outline h-min" />
-                <label>Product: </label><input
-                    value={localProduct} onChange={e => {
-                        setLocalProduct(e.target.value)
-                        if (e.target.value) {
-                            searchParams.set('product', e.target.value)
-                        }
-                        else {
-                            searchParams.delete('product')
-                        }
-                        router.push(`/?${searchParams.toString()}`)
-                    }}
-                    type="text" className="outline h-min" />
+            <div className="mt-5 flex justify-between items-center">
+                <div>
+                    <label>Location: </label>
+                    <input ref={locationInputRef}
+                        onChange={e => setLocation(e.target.value)}
+                        value={location} type="text" className="outline h-min mx-[1vw]" />
+                    <button className="bg-cyan-200 px-[1vw]" onClick={async () => {
+                        const currLocationCoor = await getCurrentLocation()
+                        const currLocation = await reversedGeocode(currLocationCoor.lat, currLocationCoor.lng)
+                        setLocation(currLocation)
+                    }}>Use current location</button>
+                </div>
+                <div>
+                    <label>Product: </label><input
+                        value={localProduct} onChange={e => {
+                            setLocalProduct(e.target.value)
+                            if (e.target.value) {
+                                searchParams.set('product', e.target.value)
+                            }
+                            else {
+                                searchParams.delete('product')
+                            }
+                            router.push(`/?${searchParams.toString()}`)
+                        }}
+                        type="text" className="outline h-min" />
+                </div>
                 {/* <label>Amount: </label><input type="number" className="outline h-min" /> */}
             </div>
         </div>

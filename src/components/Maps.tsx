@@ -1,10 +1,11 @@
 "use client"
 
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, InfoWindow, Marker } from '@react-google-maps/api';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { getCurrentLocation } from './SearchItem';
 
-type MarkerType = {
+export type MarkerType = {
     name: string,
     location: {
         lat: number,
@@ -17,12 +18,16 @@ const containerStyle = {
     height: 'inherit'
 };
 
-export default function Maps() {
+export default function Maps({currMarker, setSelectedMarker}:{currMarker: MarkerType | null, setSelectedMarker: Dispatch<SetStateAction<MarkerType | null>>}) {
 
     const [markers, setMarkers] = useState<MarkerType[]>()
+    const [currLocation, setCurrLocation] = useState<{ lat: number, lng: number }>()
+    const searchParams = useSearchParams()
 
     useEffect(() => {
+
         (async () => {
+            setCurrLocation(await getCurrentLocation())
             const response = await fetch('/api/')
             const data: any[] = await response.json()
 
@@ -45,30 +50,37 @@ export default function Maps() {
         })()
     }, [])
 
+    if (currLocation) {
 
-    const searchParams = useSearchParams()
+        const strLat = searchParams.get('lat')
+        const strLng = searchParams.get('lng')
 
-    const strLat = searchParams.get('lat')
-    const strLng = searchParams.get('lng')
+        const lat = strLat ? parseFloat(strLat) : currLocation?.lat
+        const lng = strLng ? parseFloat(strLng) : currLocation?.lng
 
-    const lat = strLat ? parseFloat(strLat) : 51.057166438
-    const lng = strLng ? parseFloat(strLng) : -114.088166314
+        const center = {
+            lat: lat,
+            lng: lng
+        };
 
-    const center = {
-        lat: lat,
-        lng: lng
-    };
-
-    return <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={15}
-    >
-        {markers && markers.map(marker => {
-            return <div key={marker.name}>
-                <Marker position={marker.location} options={{ icon: '/download.jpg' }} />
-            </div>
-        })}
-    </GoogleMap>
-
+        return <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={15}
+        >
+            {markers && markers.map(marker => {
+                return <div key={marker.name}>
+                    <Marker position={marker.location} options={{ icon: '/download.jpg' }} onClick={() => setSelectedMarker(marker)} />
+                </div>
+            })}
+            {currMarker && (
+                <InfoWindow
+                    position={currMarker.location}
+                    onCloseClick={() => setSelectedMarker(null)}
+                >
+                    <p>{currMarker.name}</p>
+                </InfoWindow>)}
+        </GoogleMap>
+    }
+    else return <></>
 }

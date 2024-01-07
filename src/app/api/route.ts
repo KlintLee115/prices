@@ -58,7 +58,7 @@ export async function GET(req: Request) {
         // collection.createIndex({ 'prices.location.coordinates': '2dsphere' });
         // const matches = await collection.aggregate(pipeline).toArray();
 
-        if (lat && lng && !searchedProduct) {
+        if (!lat && !lng && !searchedProduct) {
             return new Response(JSON.stringify(matches))
         }
 
