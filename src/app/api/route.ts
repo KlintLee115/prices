@@ -1,15 +1,18 @@
 import clientPromise from "@/lib/mongodb";
 import { MongoClient, ObjectId } from "mongodb";
 
-const uri = process.env.MONGODB_URI
-
 type PriceType = {
+    id: any,
+    price: number,
+    product: string,
+    date: any,
+    address: string,
     location: {
         coordinates: [number, number] // [longitude, latitude]
     }
 };
 
-type ItemsType = {
+type InsertItemsType = {
     products: string;
     price: number;
     address: string;
@@ -35,35 +38,54 @@ export async function GET(req: Request) {
         const radiusInKilometers = 10
 
         const { searchParams } = new URL(req.url)
-        const lat = Number(searchParams.get('lat'))
-        const lng = Number(searchParams.get('lng'))
+        let lat: string | number | null = searchParams.get('lat')
+        let lng: string | number | null = searchParams.get('lng')
+        const searchedProduct = searchParams.get('product')
 
-        // Initialize an empty query object
+        let matches = (await (await GetCollection()).find({}).toArray())[0].prices;
 
-        if (!lat || !lng) {
-            return new Response(JSON.stringify({ item: null }))
+        // // Check if lat and/or lng are defined in the request
+        // const pipeline = [{
+        //     $geoNear: {
+        //         near: { type: "Point", coordinates: [101.6164017, 3.1480670] },
+        //         distanceField: "dist.calculated",
+        //         maxDistance: radiusInKilometers * 1000,
+        //         spherical: true,
+        //     }
+        // }]
+
+        // const collection = await GetCollection();
+        // collection.createIndex({ 'prices.location.coordinates': '2dsphere' });
+        // const matches = await collection.aggregate(pipeline).toArray();
+
+        if (lat && lng && !searchedProduct) {
+            return new Response(JSON.stringify(matches))
         }
 
-        // Connect to the database
-        const potentialMatches = await (await GetCollection()).find({}).toArray();
-        console.log(potentialMatches)
+        if (lat && lng) {
+            const numLat = Number(lat)
+            const numLng = Number(lng)
 
-        const matches = potentialMatches.flatMap(object =>
-            object.prices.filter((item: PriceType) => {
+            matches = matches.filter((item: PriceType) => {
                 const [targetlong, targetLat] = item.location.coordinates;
-                const distance = calculateDistance(lat, lng, targetlong, targetLat);
-                return distance <= radiusInKilometers * 10;
+
+                const distance = calculateDistance(numLat, numLng, targetLat, targetlong);
+                return distance <= radiusInKilometers * 1000;
             })
-        );
+        }
 
-        console.log(matches)
-
+        if (searchedProduct) {
+            matches = matches.filter((item: PriceType) => {
+                return item.product.toLowerCase().includes(searchedProduct.toLowerCase())
+            })
+        }
 
         return new Response(JSON.stringify(matches))
+
     }
     catch (err) {
         console.log(err)
-        return new Response(JSON.stringify(err))
+        return new Response(JSON.stringify({ error: err }))
     }
 }
 
@@ -74,15 +96,18 @@ export async function POST(req: Request) {
         const collection = db.collection('prices')
 
         const items = await req.json()
-        const { products, price, address, lat, lng, dateStr }: ItemsType = items
+        const { products, price, address, lat, lng, dateStr }: InsertItemsType = items
 
         const updateData = {
             id: new ObjectId(),
             address: address,
-            price: price, // You can replace this with the actual price you want to set
+            price: price,
             product: products,
             date: new Date(dateStr),
-            coordinates: [lng, lat]
+            location: {
+                type: "Point",
+                coordinates: [lng, lat]
+            }
         }
 
         await collection.updateOne(
@@ -101,6 +126,7 @@ export async function POST(req: Request) {
         await client.close()
     }
 }
+
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371000; // metres
     const v1 = lat1 * Math.PI / 180; // φ, λ in radians

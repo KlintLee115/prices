@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 
 // Replace with your MongoDB connection string
-const uri = 'mongodb+srv://klintmongo:Motherorange1@prices.o0nfqfl.mongodb.net/'
+const uri = process.env.MONGODB_URI
 const options = {};
 
 declare global {
@@ -14,7 +14,7 @@ class Singleton {
   private clientPromise: Promise<MongoClient>;
 
   private constructor() {
-    this.client = new MongoClient(uri, options);
+    this.client = new MongoClient(uri!!, options);
     this.clientPromise = this.client.connect();
 
     if (process.env.NODE_ENV === 'development') {

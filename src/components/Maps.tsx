@@ -2,39 +2,49 @@
 
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+type MarkerType = {
+    name: string,
+    location: {
+        lat: number,
+        lng: number
+    }
+}
 
 const containerStyle = {
     width: '500px',
-    height: '500px'
+    height: 'inherit'
 };
 
-const markers = [
-    {
-        name: "location-1",
-        location: {
-            lat: 51.0672697,
-            lng: -114.0863437
-        }
-    },
-    {
-        name: "location-2",
-        location: {
-            lat: 51.06026560000001,
-            lng: -114.0794573
-        }
-
-    },
-    {
-        name: "location-3",
-        location: {
-            lat: 3.1480679,
-            lng: -114.0794573
-        }
-
-    }
-]
-
 export default function Maps() {
+
+    const [markers, setMarkers] = useState<MarkerType[]>()
+
+    useEffect(() => {
+        (async () => {
+            const response = await fetch('/api/')
+            const data: any[] = await response.json()
+
+            setMarkers(_ => {
+                const updatedData: MarkerType[] = []
+                data.forEach(item => {
+                    const newData: MarkerType = {
+                        location: {
+                            lng: item.location.coordinates[0],
+                            lat: item.location.coordinates[1]
+                        },
+                        name: item.address
+                    }
+
+                    updatedData.push(newData)
+                })
+                return updatedData
+            })
+
+        })()
+    }, [])
+
 
     const searchParams = useSearchParams()
 
@@ -54,7 +64,7 @@ export default function Maps() {
         center={center}
         zoom={15}
     >
-        {markers.map(marker => {
+        {markers && markers.map(marker => {
             return <div key={marker.name}>
                 <Marker position={marker.location} options={{ icon: '/download.jpg' }} />
             </div>

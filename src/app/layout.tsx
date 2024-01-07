@@ -13,13 +13,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
 
-  const [isMapsLoaded, setMapsLoaded] = useState(false);
+  const [isMapsLoaded, setMapsLoaded] = useState(true);
 
   return (
     <html lang="en">
-      {/* <head><script type="text/javascript" src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places'></script></head> */}
+      <head><script type="text/javascript" src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places'></script></head>
       <body className={inter.className}>{isMapsLoaded ? children : <div>Loading</div>}
-        <Script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places" onLoad={()=>setMapsLoaded(true)} defer />
+        {/* <Script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places" onLoad={()=>setMapsLoaded(true)} defer /> */}
       </body>
     </html>
   )
