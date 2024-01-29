@@ -3,7 +3,7 @@
 import Maps, { MarkerType } from '@/components/Maps';
 import OverlayForm from '@/components/OverlayForm';
 import SearchItem from '@/components/SearchItem';
-import { BasePricesResponseType, FeedbackType, FormattedPricesResponseType, Icons, SessionInfo, handleFeedback } from '@/lib/general';
+import { BasePricesResponseType, FeedbackType, FormattedPricesResponseType, Icons, SessionInfo, URL_Endpoints, handleFeedback } from '@/lib/general';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
@@ -55,14 +55,14 @@ export default function Home() {
 
       (async () => {
 
-        const pricesResponse = await fetch(`http://localhost:3000/getPricesData?${searchParams.toString()}`)
+        const pricesResponse = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData?${searchParams.toString()}`)
         const pricesData: { error: string } | BasePricesResponseType[] = await pricesResponse.json()
 
         if (pricesResponse.status !== 200 || !Array.isArray(pricesData)) {
           throw (pricesData as { error: string }).error
         }
 
-        const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch('http://localhost:3000/getUserFeedbacks', {
+        const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch(`${URL_Endpoints.BASE_URL}/getUserFeedbacks`, {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',

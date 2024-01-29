@@ -4,7 +4,7 @@ import { GoogleMap, InfoWindow, Marker } from '@react-google-maps/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { getCurrentLocation } from './SearchItem';
-import { BasePricesResponseType } from '@/lib/general';
+import { BasePricesResponseType, URL_Endpoints } from '@/lib/general';
 
 export type MarkerType = {
     name: string,
@@ -31,7 +31,7 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
 
             (async () => {
                 setCurrLocation(await getCurrentLocation())
-                const response = await fetch(`http://localhost:3000/getPricesData`)
+                const response = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData`)
                 const data: { error: string } | BasePricesResponseType[] = await response.json()
 
                 if (response.status === 500 && !(Array.isArray(data))) {
