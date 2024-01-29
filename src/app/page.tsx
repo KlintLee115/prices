@@ -3,7 +3,7 @@
 import Maps, { MarkerType } from '@/components/Maps';
 import OverlayForm from '@/components/OverlayForm';
 import SearchItem from '@/components/SearchItem';
-import { BasePricesResponseType, FeedbackType, FormattedPricesResponseType, Icons, SessionInfo, URL_Endpoints, handleFeedback } from '@/lib/general';
+import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SessionInfo, URL_Endpoints } from '@/lib/general';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
@@ -36,6 +36,8 @@ export default function Home() {
   const strLng = searchParams.get('lng')
   const product = searchParams.get('product')
   const radius = searchParams.get('radius')
+
+  const checkUser = () => !(session?.user) && router.push('http://localhost:3000/api/auth/signin')
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google) {
@@ -147,70 +149,16 @@ export default function Home() {
     return (
       <div className='mt-[5vh] overflow-y-auto'>
         {Array.from(prices.keys()).map(id => (
-          <PriceCard key={id} item={prices.get(id) as FormattedPricesResponseType}
+          <PriceCard
+            setPrices={setPrices}
+            checkUser={checkUser}
+            currSelectedItemKey={selectedItemKey} setCurrMarker={setCurrMarker}
+            setSelectedItemKey={setSelectedItemKey}
+            key={id} id={id} prices={prices}
           />
-        ))}
+        )
+        )}
       </div>
     );
-  }
-
-  function PriceCard({ item }: { item: FormattedPricesResponseType, }) {
-
-    const { product, price, address, isLiked, isDisliked, likes, dislikes, lat, lng, id } = item
-
-    const handleFeedbackFunc = async (feedbackType: FeedbackType)
-      : Promise<number> => {
-
-      if (!(session?.user)) {
-        router.push('http://localhost:3000/api/auth/signin')
-        return NaN
-      }
-
-      return handleFeedback({ id, isLiked, isDisliked, prices, setPrices, feedbackType })
-    }
-
-    return <div
-      onClick={() => {
-        setSelectedItemKey(id)
-        setCurrMarker({
-          lng: lng,
-          lat: lat,
-          name: address
-        })
-      }}
-      className={`border border-black h-fit py-[1vh] px-[3vw] flex ${id === selectedItemKey ? "bg-cyan-100" : "bg-transparent"}`}>
-      <div>
-        <h3>Item: {product}</h3>
-        <h3>Price: {price}</h3>
-        <h3>Address: {address}</h3>
-      </div>
-      <div className='relative'>
-        <div className='w-14'>
-          {
-            isLiked ? (
-              <Icons.BLACK_LIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Like)} />
-            )
-              : <Icons.WHITE_LIKE_ICON onClick={async () => {
-                const responseCode = await handleFeedbackFunc(FeedbackType.Like)
-                responseCode === 200 && isDisliked && handleFeedbackFunc(FeedbackType.Dislike)
-              }} />
-          }
-          {likes}
-        </div>
-        <div className='absolute bottom-0 w-14'>
-          {
-            isDisliked ? (
-              <Icons.BLACK_DISLIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Dislike)} />
-            )
-              : <Icons.WHITE_DISLIKE_ICON onClick={async () => {
-                const responseCode = await handleFeedbackFunc(FeedbackType.Dislike)
-                responseCode === 200 && isLiked && handleFeedbackFunc(FeedbackType.Like)
-              }}
-              />
-          }
-          {dislikes}
-        </div>
-      </div>
-    </div>
   }
 }

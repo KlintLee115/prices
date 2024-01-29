@@ -1,3 +1,4 @@
+import { MarkerType } from "@/components/Maps";
 import { Session } from "next-auth"
 import { Dispatch, SetStateAction } from "react";
 
@@ -73,53 +74,6 @@ export class SessionInfo {
     }
 }
 
-export const handleFeedback = async ({
-    id, isLiked, isDisliked, prices, setPrices, feedbackType
-}: HandleFeedbackProp): Promise<number> => {
-
-    const toLike = feedbackType === FeedbackType.Like;
-    const toDislike = feedbackType === FeedbackType.Dislike;
-
-    const action = (toLike && prices.get(id)?.isLiked) || (toDislike && prices.get(id)?.isDisliked) ? -1 : 1;
-
-    if (action === -1 && ((feedbackType === FeedbackType.Like && prices.get(id)?.likes === 0) ||
-        (toDislike && prices.get(id)?.dislikes === 0))) return 403
-
-    const feedbackResponse = await fetch(`${URL_Endpoints.BASE_URL}${URL_Endpoints.FEEDBACK_ENDPOINT}`, {
-        method: "PATCH",
-        headers: { 'Content-Type': 'application/json', },
-        body: JSON.stringify({ id, feedbackType, action, email: SessionInfo.get("Email") })
-    })
-
-    const status = feedbackResponse.status
-
-    if (status === 200) {
-        setPrices(prevPrices => {
-            const newPrices = new Map(prevPrices)
-            const newPrice = { ...newPrices.get(id)!! }
-
-            if (feedbackType === FeedbackType.Like) {
-                newPrice.likes = newPrice.likes + action
-                newPrice.isLiked = !newPrice.isLiked
-            }
-            else {
-                newPrice.dislikes = newPrice.dislikes + action
-                newPrice.isDisliked = !newPrice.isDisliked
-            }
-            newPrices.set(id, newPrice);
-            return newPrices;
-        })
-    }
-
-    if (status === 200 && (toLike ? isDisliked : isLiked)) {
-
-        const feedbackType = toLike ? FeedbackType.Dislike : FeedbackType.Like
-        return handleFeedback({ id, isLiked, isDisliked, prices, setPrices, feedbackType });
-    }
-
-    return feedbackResponse.status
-}
-
 export type BasePricesResponseType = {
     id: number,
     date: string,
@@ -145,6 +99,121 @@ export type FormattedPricesResponseType =
         dislikes: number
     }
     >
+
+export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedItemKey, id, prices, setCurrMarker, setSelectedItemKey }:
+    {
+        id: number,
+        prices: Map<number, FormattedPricesResponseType>,
+        setSelectedItemKey: Dispatch<SetStateAction<number>>,
+        setCurrMarker: Dispatch<SetStateAction<MarkerType | null>>,
+        currSelectedItemKey: number,
+        checkUser: () => void,
+        setPrices: Dispatch<SetStateAction<Map<number, FormattedPricesResponseType>>>
+    }) {
+
+    const { product, price, address, isLiked, isDisliked, likes, dislikes, lat, lng } = prices.get(id) as FormattedPricesResponseType
+
+    const handleFeedback = async (feedbackType: FeedbackType): Promise<number> => {
+
+        const toLike = !isLiked && feedbackType === FeedbackType.Like;
+        const toUnLike = isLiked && feedbackType === FeedbackType.Like;
+
+        const toDislike = !isDisliked && feedbackType === FeedbackType.Dislike;
+        const toUnDislike = isDisliked && feedbackType === FeedbackType.Dislike;
+
+        if ((toUnLike && likes === 0) || (toUnDislike && dislikes === 0)) return 403
+
+        const action = (toLike || toDislike) ? 1 : -1
+
+        const feedbackResponse = await fetch(`${URL_Endpoints.BASE_URL}${URL_Endpoints.FEEDBACK_ENDPOINT}`, {
+            method: "PATCH",
+            headers: { 'Content-Type': 'application/json', },
+            body: JSON.stringify({ id, feedbackType, action, email: SessionInfo.get("Email") })
+        })
+
+        const status = feedbackResponse.status
+
+        if (status === 200) {
+            setPrices(prevPrices => {
+                const newPrices = new Map(prevPrices)
+                const newPrice = { ...newPrices.get(id)!! }
+
+                if (toUnLike || toLike) newPrice.likes += action
+
+                else if (toDislike || toUnDislike) newPrice.dislikes += action
+
+                if (toLike) newPrice.isLiked = true
+                else if (toDislike) newPrice.isDisliked = true
+                else if (toUnLike) newPrice.isLiked = false
+                else if (toUnDislike) newPrice.isDisliked = false
+
+                newPrices.set(id, newPrice);
+                return newPrices;
+            })
+        }
+
+        if (status === 200 && toLike) {
+
+            if (toUnLike || toUnDislike) {
+                return handleFeedback(feedbackType);
+            }
+        }
+
+        return feedbackResponse.status
+    }
+
+    const handleFeedbackFunc = async (feedbackType: FeedbackType)
+        : Promise<number> => {
+
+        checkUser()
+
+        return handleFeedback(feedbackType)
+    }
+
+    return <div
+        onClick={() => {
+            setSelectedItemKey(id)
+            setCurrMarker({
+                lng: lng,
+                lat: lat,
+                name: address
+            })
+        }}
+        className={`border border-black h-fit py-[1vh] px-[3vw] flex ${id === selectedItemKey ? "bg-cyan-100" : "bg-transparent"}`}>
+        <div>
+            <h3>Item: {product}</h3>
+            <h3>Price: {price}</h3>
+            <h3>Address: {address}</h3>
+        </div>
+        <div className='relative'>
+            <div className='w-14'>
+                {
+                    isLiked ? (
+                        <Icons.BLACK_LIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Like)} />
+                    )
+                        : <Icons.WHITE_LIKE_ICON onClick={async () => {
+                            const responseCode = await handleFeedbackFunc(FeedbackType.Like)
+                            responseCode === 200 && isDisliked && handleFeedbackFunc(FeedbackType.Dislike)
+                        }} />
+                }
+                {likes}
+            </div>
+            <div className='absolute bottom-0 w-14'>
+                {
+                    isDisliked ? (
+                        <Icons.BLACK_DISLIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Dislike)} />
+                    )
+                        : <Icons.WHITE_DISLIKE_ICON onClick={async () => {
+                            const responseCode = await handleFeedbackFunc(FeedbackType.Dislike)
+                            responseCode === 200 && isLiked && handleFeedbackFunc(FeedbackType.Like)
+                        }}
+                        />
+                }
+                {dislikes}
+            </div>
+        </div>
+    </div>
+}
 
 export class Icons {
     private static FeedbackIcon({ onClick, children }: { onClick: any, children: JSX.Element }) {

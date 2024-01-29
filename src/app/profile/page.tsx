@@ -1,16 +1,12 @@
 "use client"
 
-import { BasePricesResponseType, FormattedPricesResponseType, Icons, SessionInfo, URL_Endpoints, handleFeedback } from "@/lib/general"
+import { BasePricesResponseType, FormattedPricesResponseType, Icons, PriceCard, SessionInfo, URL_Endpoints } from "@/lib/general"
 import { useEffect, useState } from "react"
 
 type BaseUserRelatedPostsType = {
     likes: BasePricesResponseType[],
     dislikes: BasePricesResponseType[],
     posts: BasePricesResponseType[]
-}
-
-enum FeedbackType {
-    Like = "Like", Dislike = "Dislike"
 }
 
 const fetchData = async function <T>(url: string, errorMessage: string): Promise<T | null> {
@@ -103,45 +99,12 @@ export default function ProfilePage() {
     </div>
 
     function PostsWidget({ ids }: { ids: number[] }) {
-        return ids.map(id => <PriceCard item={prices.get(id) as FormattedPricesResponseType} id={id} key={id} />)
-    }
-
-    function PriceCard({ item, id }: {
-        item: FormattedPricesResponseType,
-        id: number,
-    }) {
-
-        const { product, price, address, isLiked, isDisliked, likes, dislikes } = item
-
-        function handleFeedbackFunc(feedbackType: FeedbackType) {
-            handleFeedback({ id, isLiked, isDisliked, prices, setPrices, feedbackType })
-        }
-
-        return <div className="border border-black h-fit py-[1vh] px-[3vw] flex bg-cyan-100">
-            <div>
-                <h3>Item: {product}</h3>
-                <h3>Price: {price}</h3>
-                <h3>Address: {address}</h3>
-            </div>
-            <div className='relative'>
-                <div className='w-14'>
-                    {
-                        item.isLiked ?
-                            <Icons.BLACK_LIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Like)} />
-                            : <Icons.WHITE_LIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Like)} />
-                    }
-                    {likes}
-                </div>
-                <div className='absolute bottom-0 w-14'>
-                    {
-                        isDisliked ?
-                            <Icons.BLACK_DISLIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Dislike)} />
-                            : <Icons.WHITE_DISLIKE_ICON onClick={() => handleFeedbackFunc(FeedbackType.Dislike)}
-                            />
-                    }
-                    {dislikes}
-                </div>
-            </div>
-        </div>
+        return ids.map(id => <PriceCard
+            setPrices={setPrices}
+            checkUser={() => { }}
+            currSelectedItemKey={id} setCurrMarker={() => { }}
+            setSelectedItemKey={() => { }}
+            key={id} id={id} prices={prices}
+        />)
     }
 }
