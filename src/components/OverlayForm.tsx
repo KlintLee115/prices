@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react";
+import { SessionInfo } from "@/lib/general";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
@@ -9,7 +9,6 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
     const locationAutoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const locationInputRef = useRef<HTMLInputElement | null>(null);
     const [location, setLocation] = useState<google.maps.places.PlaceResult>()
-    const { data: session } = useSession()
 
     function formSubmitted(e: FormEvent<HTMLFormElement>) {
         e.preventDefault(); // Prevent the default form submission behavior
@@ -33,7 +32,7 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        by: session?.user?.email,
+                        by: SessionInfo.get("Email"),
                         products, price, dateStr, lat, lng,
                         address: location?.address_components?.map(component => component.long_name).join(', '),
                     })
@@ -49,7 +48,7 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
 
         if (isOverlayOn) {
 
-            if (session?.user?.email) {
+            if (SessionInfo.get("Email")) {
 
                 if (!locationInputRef.current) return;
 
@@ -64,10 +63,7 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
                 );
 
                 locationAutoCompleteRef.current.addListener("place_changed", () => {
-
-
-                    const place = locationAutoCompleteRef.current?.getPlace();
-                    setLocation(place)
+                    setLocation(locationAutoCompleteRef.current?.getPlace())
                 });
 
                 return () => {
@@ -112,7 +108,7 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
     return (
         isOverlayOn ? (
             <OverlayFrame>
-                {session?.user?.email ? <OverlayForm /> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
+                {SessionInfo.get("Email") ? <OverlayForm /> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
             </OverlayFrame>
         )
             : <div></div>
