@@ -37,7 +37,8 @@ export enum FeedbackType {
 
 
 export class URL_Endpoints {
-    static BASE_URL = 'https://ksportsbackend.onrender.com/prices';
+    static BASE_URL = 'http://localhost:3000/prices';
+    // static BASE_URL = 'https://ksportsbackend.onrender.com/prices';
     static FEEDBACK_ENDPOINT = '/feedback';
     static USER_INFO_ENDPOINT = '/getUserInfo';
     static GET_POSTS_ENDPOINT = '/getPosts';
@@ -99,6 +100,13 @@ export type FormattedPricesResponseType =
         dislikes: number
     }
     >
+
+export type SearchItemsProp = {
+    lat?: string,
+    lng?: string,
+    radius?: string,
+    product?: string;
+}
 
 export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedItemKey, id, prices, setCurrMarker, setSelectedItemKey }:
     {

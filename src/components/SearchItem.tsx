@@ -1,15 +1,15 @@
 "use client"
 
+import { SearchItemsProp } from "@/lib/general";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useEffect, useState } from "react";
 
-type SearchItemsProp = {
-    lat?: string,
-    lng?: string,
-    radius?: string,
-    product?: string;
+type FormattedSearchItemsProp = Omit<SearchItemsProp, "lat" | "lng" | "radius"> & {
+    lat: number,
+    lng: number,
+    radius: number
 }
 
 const ProfileIcon = ({ pathName }: { pathName: string }) => (
@@ -33,12 +33,11 @@ export async function getCurrentLocation(): Promise<{ lat: number, lng: number }
     });
 }
 
-export default function SearchItem(props: SearchItemsProp) {
+export default function SearchItem({
+    lat, lng, radius, product
+}: FormattedSearchItemsProp) {
 
-    const lat = props.lat ? parseFloat(props.lat) : NaN
-    const lng = props.lng ? parseFloat(props.lng) : NaN
-    const radius = props.radius ? parseInt(props.radius) : NaN
-    const product = props.product
+    radius = isNaN(radius) ? 5 : radius
 
     const pathName = usePathname()
 

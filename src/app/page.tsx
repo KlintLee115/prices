@@ -3,7 +3,7 @@
 import Maps, { MarkerType } from '@/components/Maps';
 import OverlayForm from '@/components/OverlayForm';
 import SearchItem from '@/components/SearchItem';
-import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SessionInfo, URL_Endpoints } from '@/lib/general';
+import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SearchItemsProp, SessionInfo, URL_Endpoints } from '@/lib/general';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
@@ -34,8 +34,12 @@ export default function Home() {
 
   const strLat = searchParams.get('lat')
   const strLng = searchParams.get('lng')
-  const product = searchParams.get('product')
-  const radius = searchParams.get('radius')
+  const product = searchParams.get('product') ?? undefined
+  const strRadius = searchParams.get('radius')
+
+  const lat = strLat ? parseFloat(strLat) : NaN
+  const lng = strLng ? parseFloat(strLng) : NaN
+  const radius = strRadius ? parseInt(strRadius) : NaN
 
   const checkUser = () => !(session?.user) && router.push('http://localhost:3000/api/auth/signin')
 
@@ -53,7 +57,7 @@ export default function Home() {
   useEffect(() => {
     const email = SessionInfo.get("Email");
 
-    if (email && strLat && strLng && radius) {
+    if (email && strLat && strLng) {
 
       (async () => {
 
@@ -96,18 +100,37 @@ export default function Home() {
     }
   }, [session?.user?.email, searchParams.get('radius'), searchParams.get('sortType'), searchParams.get('lat'), searchParams.get('lng'), searchParams.get('product')])
 
+  function ListPrices() {
+
+    return (
+      <div className='mt-[5vh] overflow-y-auto'>
+        {Array.from(prices.keys()).map(id => (
+          <PriceCard
+            setPrices={setPrices}
+            checkUser={checkUser}
+            currSelectedItemKey={selectedItemKey} setCurrMarker={setCurrMarker}
+            setSelectedItemKey={setSelectedItemKey}
+            key={id} id={id} prices={prices}
+          />
+        )
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <Script
         src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places' onLoad={() => setMapsLoaded(true)} defer />
       {isMapsLoaded ?
-        strLat && strLng && radius ?
+        strLat && strLng ?
           <>
             <OverlayForm isOverlayOn={isOverlayOn} />
             <div className={isOverlayOn ? "blur-sm" : ""} onClick={() => isOverlayOn && setIsOverlayOn(false)}>
-              <SearchItem lat={strLat ? parseFloat(strLat) : undefined}
-                lng={strLng ? parseFloat(strLng) : undefined}
-                product={product ?? undefined}
+              <SearchItem lat={lat}
+                lng={lng}
+                radius={radius}
+                product={product}
               />
               <div className='flex justify-evenly mt-[5vh] min-h-[60vh] max-h-[70vh]'>
                 <Maps currMarker={currMarker} setSelectedMarker={setCurrMarker} />
@@ -135,30 +158,14 @@ export default function Home() {
             </div>
           </>
           : <>
-            <SearchItem lat={strLat ? parseFloat(strLat) : undefined}
-              lng={strLng ? parseFloat(strLng) : undefined}
-              product={product ?? undefined}
+            <SearchItem lat={lat}
+              radius={radius}
+              lng={lng}
+              product={product}
             />
           </>
         : <div>ok</div>
       }
     </>
   )
-
-  function ListPrices() {
-    return (
-      <div className='mt-[5vh] overflow-y-auto'>
-        {Array.from(prices.keys()).map(id => (
-          <PriceCard
-            setPrices={setPrices}
-            checkUser={checkUser}
-            currSelectedItemKey={selectedItemKey} setCurrMarker={setCurrMarker}
-            setSelectedItemKey={setSelectedItemKey}
-            key={id} id={id} prices={prices}
-          />
-        )
-        )}
-      </div>
-    );
-  }
 }
