@@ -7,7 +7,8 @@ import { getCurrentLocation } from './SearchItem';
 import { BasePricesResponseType, URL_Endpoints } from '@/lib/general';
 
 export type MarkerType = {
-    name: string,
+    address: string,
+    name: number,
     lat: number,
     lng: number
 }
@@ -42,9 +43,11 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
                     const displayedData: MarkerType[] = [];
                     (data as BasePricesResponseType[]).forEach((item: BasePricesResponseType) => {
                         const newData: MarkerType = {
+
+                            address: item.address,
                             lng: parseFloat(item.lng),
                             lat: parseFloat(item.lat),
-                            name: item.address
+                            name: item.id
                         }
 
                         displayedData.push(newData)
@@ -98,7 +101,7 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
                         }}
                         onCloseClick={() => setSelectedMarker(null)}
                     >
-                        <p>{currMarker.name}</p>
+                        <p>{currMarker.address}</p>
                     </InfoWindow>)}
             </GoogleMap>
         }

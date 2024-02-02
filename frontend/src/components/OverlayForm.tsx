@@ -2,16 +2,15 @@
 
 import { SessionInfo, URL_Endpoints } from "@/lib/general";
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useEffect, useRef, useState } from "react";
 
-export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
+export default function Overlay({ isOverlayOn, setIsOverlayOn }: { isOverlayOn: boolean, setIsOverlayOn: Dispatch<SetStateAction<boolean>> }) {
 
     const locationAutoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const locationInputRef = useRef<HTMLInputElement | null>(null);
     const [location, setLocation] = useState<google.maps.places.PlaceResult>()
 
     function formSubmitted(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault(); // Prevent the default form submission behavior
 
         // Access the form element
         const formData = new FormData(e.currentTarget)
@@ -42,41 +41,40 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
                 throw err
             }
         })()
+
+        setIsOverlayOn(false)
     }
 
     useEffect(() => {
 
-        if (isOverlayOn) {
+        if (isOverlayOn && SessionInfo.get("Email")) {
 
-            if (SessionInfo.get("Email")) {
+            if (!locationInputRef.current) return;
 
-                if (!locationInputRef.current) return;
-
-                const options: google.maps.places.AutocompleteOptions = {
-                    fields: ["address_components", "geometry", "icon", "name"],
-                    types: ["establishment"],
-                }
-
-                locationAutoCompleteRef.current = new google.maps.places.Autocomplete(
-                    locationInputRef.current,
-                    options
-                );
-
-                locationAutoCompleteRef.current.addListener("place_changed", () => {
-                    setLocation(locationAutoCompleteRef.current?.getPlace())
-                });
-
-                return () => {
-                    if (locationAutoCompleteRef.current) {
-                        window.google.maps.event.clearInstanceListeners(locationAutoCompleteRef.current);
-                    }
-                };
+            const options: google.maps.places.AutocompleteOptions = {
+                fields: ["address_components", "geometry", "icon", "name"],
+                types: ["establishment"],
             }
+
+            locationAutoCompleteRef.current = new google.maps.places.Autocomplete(
+                locationInputRef.current,
+                options
+            );
+
+            locationAutoCompleteRef.current.addListener("place_changed", () => {
+                setLocation(locationAutoCompleteRef.current?.getPlace())
+            });
+
+            return () => {
+                if (locationAutoCompleteRef.current) {
+                    window.google.maps.event.clearInstanceListeners(locationAutoCompleteRef.current);
+                }
+            };
         }
     }), []
 
     function OverlayForm() {
-        
+
         return (
             <form className='flex flex-col gap-[3vh]' onSubmit={formSubmitted}>
                 <p className="text-xl font-bold">Insert a new item</p>
@@ -107,28 +105,17 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
     }
 
     return (
-        isOverlayOn ? (
-            <OverlayFrame>
-                {SessionInfo.get("Email") ? <OverlayForm /> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
-            </OverlayFrame>
-        )
-            : <div></div>
+        <OverlayFrame isOverlayOn={isOverlayOn}>
+            {SessionInfo.get("Email") ? <OverlayForm /> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
+        </OverlayFrame>
     )
 }
 
-function OverlayFrame({ children }: { children: JSX.Element }) {
-
-    const [isVisible, setIsVisible] = useState(false)
-
-    useEffect(() => {
-        setTimeout(() => {
-            setIsVisible(true)
-        }, 0);
-    })
+function OverlayFrame({ children, isOverlayOn }: { children: JSX.Element, isOverlayOn: boolean }) {
 
     return <div className={`bg-white z-10 h-fit py-[5vh]
-    fixed top-[10vh] shadow-black shadow-2xl
-    left-0 right-0 mx-auto w-fit px-[5vw]  transition-all ${isVisible ? 'scale-100' : 'scale-0'}`}>
+    fixed inset-0 top-[10vh] shadow-black shadow-2xl
+    mx-auto w-fit px-[5vw]  transition-all ${isOverlayOn ? 'scale-100' : 'scale-0'}`}>
         {children}
     </div>
 }

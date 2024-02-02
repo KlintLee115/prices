@@ -110,7 +110,7 @@ export default function SearchItem({
     }, []);
 
     return (
-        <div className="border border-black px-10 py-7">
+        <div className="border border-black px-10 py-7 flex-grow-0">
             <div className="flex justify-between">
                 <h1>Search for items</h1>
                 <div className="flex items-center gap-3">

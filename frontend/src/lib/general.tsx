@@ -186,7 +186,8 @@ export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedI
             setCurrMarker({
                 lng: lng,
                 lat: lat,
-                name: address
+                name: id,
+                address: address
             })
         }}
         className={`border border-black h-fit py-[1vh] px-[3vw] flex 

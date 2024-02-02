@@ -5,11 +5,12 @@ import OverlayForm from '@/components/OverlayForm';
 import SearchItem from '@/components/SearchItem';
 import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SessionInfo, URL_Endpoints } from '@/lib/general';
 import { useSession } from 'next-auth/react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { useState, useEffect } from 'react';
 
-export default function Home() {
+function Home() {
 
   const SortOptions = {
     PriceLTH:
@@ -48,13 +49,13 @@ export default function Home() {
       setMapsLoaded(true);
     }
 
-    (async () => {
-      const response = await fetch('/api/send', {
-        method:"POST"
-      })
+    // (async () => {
+    //   const response = await fetch('/api/send', {
+    //     method:"POST"
+    //   })
 
-      console.log(await response.json())
-    })()
+    //   console.log(await response.json())
+    // })()
 
   }, []);
 
@@ -132,16 +133,19 @@ export default function Home() {
     <>
       <Script
         src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places' onLoad={() => setMapsLoaded(true)} defer />
-      {isMapsLoaded ?
-        strLat && strLng ?
+      <OverlayForm isOverlayOn={isOverlayOn} setIsOverlayOn={setIsOverlayOn}/>
+      {isMapsLoaded ? (
+
+        <div className={`min-h-[100vh] flex flex-col ${isOverlayOn ? "blur-sm" : ""}`} onClick={() => isOverlayOn && setIsOverlayOn(false)}>
+          <SearchItem lat={lat}
+            lng={lng}
+            radius={radius}
+            product={product}
+          />
           <>
-            <OverlayForm isOverlayOn={isOverlayOn} />
-            <div className={isOverlayOn ? "blur-sm" : ""} onClick={() => isOverlayOn && setIsOverlayOn(false)}>
-              <SearchItem lat={lat}
-                lng={lng}
-                radius={radius}
-                product={product}
-              />
+
+            {lat & lng ?
+
               <div className='flex justify-evenly mt-[5vh] min-h-[60vh] max-h-[70vh]'>
                 <Maps currMarker={currMarker} setSelectedMarker={setCurrMarker} />
                 <div className='max-h-full max-w-[35vw]'>
@@ -177,17 +181,20 @@ export default function Home() {
                   <ListPrices />
                 </div>
               </div>
-            </div>
+              : <div className='flex-grow relative'>
+                <p className='absolute inset-0 flex justify-center items-center'>
+                  Must provide location for information to load
+                </p>
+              </div>
+            }
           </>
-          : <>
-            <SearchItem lat={lat}
-              radius={radius}
-              lng={lng}
-              product={product}
-            />
-          </>
-        : <div>ok</div>
+        </div>)
+        : <p className='bg-red-300 items-center flex-grow'>Loading</p>
+
       }
     </>
   )
 }
+export default dynamic(() => Promise.resolve(Home), {
+  ssr: false,
+})
