@@ -37,9 +37,8 @@ export enum FeedbackType {
 
 
 export class URL_Endpoints {
-    static BASE_URL = 'http://localhost:3001';
-    // static BASE_URL = 'https://ksportsbackend.onrender.com/prices';
-    // static BASE_URL = 'https://pricesbackend.azurewebsites.net';
+    // static BASE_URL = 'http://localhost:3001';
+    static BASE_URL = 'https://pricesbackend.azurewebsites.net';
     static FEEDBACK_ENDPOINT = '/feedback';
     static USER_INFO_ENDPOINT = '/getUserInfo';
     static GET_POSTS_ENDPOINT = '/getPosts';
