@@ -6,7 +6,7 @@ const db = require('./postgres-config')
 
 const app = express()
 
-const domain = "http://localhost:3001"
+const domain = "https://easyprices.vercel.app"
 
 const corsOptions = {
     origin: function (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {

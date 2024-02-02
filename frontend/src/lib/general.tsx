@@ -37,8 +37,8 @@ export enum FeedbackType {
 
 
 export class URL_Endpoints {
-    // static BASE_URL = 'http://localhost:3001';
-    static BASE_URL = 'https://pricesbackend.azurewebsites.net';
+    static BACKEND_URL =process.env.NODE_ENV === "development" ? 'http://localhost:3001' : 'https://pricesbackend.azurewebsites.net';
+    static AUTHENTICATION_URL= process.env.NODE_ENV === "development" ? 'http://localhost:3000/api/auth/signin' : 'https://easyprices.vercel.app/api/auth/signin'
     static FEEDBACK_ENDPOINT = '/feedback';
     static USER_INFO_ENDPOINT = '/getUserInfo';
     static GET_POSTS_ENDPOINT = '/getPosts';
@@ -135,7 +135,7 @@ export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedI
 
         const action = (toLike || toDislike) ? 1 : -1
 
-        const feedbackResponse = await fetch(`${URL_Endpoints.BASE_URL}${URL_Endpoints.FEEDBACK_ENDPOINT}`, {
+        const feedbackResponse = await fetch(`${URL_Endpoints.BACKEND_URL}${URL_Endpoints.FEEDBACK_ENDPOINT}`, {
             method: "PATCH",
             headers: { 'Content-Type': 'application/json', },
             body: JSON.stringify({ id, feedbackType, action, email: SessionInfo.get("Email") })

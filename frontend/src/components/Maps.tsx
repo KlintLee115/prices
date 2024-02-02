@@ -2,7 +2,7 @@
 
 import { GoogleMap, InfoWindow, Marker } from '@react-google-maps/api';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { CSSProperties, Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { getCurrentLocation } from './SearchItem';
 import { BasePricesResponseType, URL_Endpoints } from '@/lib/general';
 
@@ -13,9 +13,9 @@ export type MarkerType = {
     lng: number
 }
 
-const containerStyle = {
+const containerStyle: CSSProperties = {
     width: '500px',
-    height: 'inherit'
+    height: 'inherit',
 };
 
 export default function Maps({ currMarker, setSelectedMarker }: { currMarker: MarkerType | null, setSelectedMarker: Dispatch<SetStateAction<MarkerType | null>> }) {
@@ -32,7 +32,7 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
 
             (async () => {
                 setCurrLocation(await getCurrentLocation())
-                const response = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData`)
+                const response = await fetch(`${URL_Endpoints.BACKEND_URL}/getPricesData`)
                 const data: { error: string } | BasePricesResponseType[] = await response.json()
 
                 if (response.status === 500 && !(Array.isArray(data))) {
@@ -75,7 +75,8 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
                 lat, lng
             };
 
-            return <GoogleMap
+            return <div className='sticky top-0 w-[500px] h-[500px]'> 
+            <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={center}
                 zoom={15}
@@ -104,6 +105,7 @@ export default function Maps({ currMarker, setSelectedMarker }: { currMarker: Ma
                         <p>{currMarker.address}</p>
                     </InfoWindow>)}
             </GoogleMap>
+            </div>
         }
 
         catch (err) {

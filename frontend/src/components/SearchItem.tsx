@@ -1,6 +1,6 @@
 "use client"
 
-import { SearchItemsProp, SessionInfo } from "@/lib/general";
+import { SearchItemsProp, SessionInfo, URL_Endpoints } from "@/lib/general";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useEffect, useState } from "react";
@@ -114,7 +114,7 @@ export default function SearchItem({
             <div className="flex justify-between">
                 <h1>Search for items</h1>
                 <div className="flex items-center gap-3">
-                    {username ? <h3>Signed in as {username}</h3> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
+                    {username ? <h3>Signed in as {username}</h3> : <Link href={URL_Endpoints.AUTHENTICATION_URL}>Sign in with Google</Link>}
                     {<ProfileIcon pathName={pathName} />}
                 </div>
             </div>

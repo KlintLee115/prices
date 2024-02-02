@@ -27,7 +27,7 @@ export default function Overlay({ isOverlayOn, setIsOverlayOn }: { isOverlayOn: 
 
         (async () => {
             try {
-                await fetch(`${URL_Endpoints.BASE_URL}/insertNewPrice`, {
+                await fetch(`${URL_Endpoints.BACKEND_URL}/insertNewPrice`, {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -106,7 +106,7 @@ export default function Overlay({ isOverlayOn, setIsOverlayOn }: { isOverlayOn: 
 
     return (
         <OverlayFrame isOverlayOn={isOverlayOn}>
-            {SessionInfo.get("Email") ? <OverlayForm /> : <Link href="http://localhost:3000/api/auth/signin">Sign in with Google</Link>}
+            {SessionInfo.get("Email") ? <OverlayForm /> : <Link href={URL_Endpoints.AUTHENTICATION_URL}>Sign in with Google</Link>}
         </OverlayFrame>
     )
 }

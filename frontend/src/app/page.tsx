@@ -42,21 +42,12 @@ function Home() {
   const lng = strLng ? parseFloat(strLng) : NaN
   const radius = strRadius ? parseInt(strRadius) : NaN
 
-  const checkUser = () => !(session?.user) && router.push('http://localhost:3000/api/auth/signin')
+  const checkUser = () => !(session?.user) && router.push(URL_Endpoints.AUTHENTICATION_URL)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google) {
       setMapsLoaded(true);
     }
-
-    // (async () => {
-    //   const response = await fetch('/api/send', {
-    //     method:"POST"
-    //   })
-
-    //   console.log(await response.json())
-    // })()
-
   }, []);
 
   if (!SessionInfo.get("Email") && session?.user) {
@@ -67,14 +58,14 @@ function Home() {
     const email = SessionInfo.get("Email");
 
     async function getPricesData(): Promise<Map<number, FormattedPricesResponseType>> {
-      const pricesResponse = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData?${searchParams.toString()}`)
+      const pricesResponse = await fetch(`${URL_Endpoints.BACKEND_URL}/getPricesData?${searchParams.toString()}`)
       const pricesData: { error: string } | BasePricesResponseType[] = await pricesResponse.json()
 
       if (pricesResponse.status !== 200 || !Array.isArray(pricesData)) {
         throw (pricesData as { error: string }).error
       }
 
-      const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch(`${URL_Endpoints.BASE_URL}/getUserFeedbacks`, {
+      const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch(`${URL_Endpoints.BACKEND_URL}/getUserFeedbacks`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +123,7 @@ function Home() {
   return (
     <>
       <Script
-        src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBnvG70wcyfAYDGLa5pWH0ClNBmihlwjJk&libraries=places' onLoad={() => setMapsLoaded(true)} defer />
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`} onLoad={() => setMapsLoaded(true)} defer />
       <OverlayForm isOverlayOn={isOverlayOn} setIsOverlayOn={setIsOverlayOn}/>
       {isMapsLoaded ? (
 
@@ -146,7 +137,7 @@ function Home() {
 
             {lat & lng ?
 
-              <div className='flex justify-evenly mt-[5vh] min-h-[60vh] max-h-[70vh]'>
+              <div className='flex justify-evenly mt-[5vh] min-h-[40vh]'>
                 <Maps currMarker={currMarker} setSelectedMarker={setCurrMarker} />
                 <div className='max-h-full max-w-[35vw]'>
                   <div className='flex justify-between'>

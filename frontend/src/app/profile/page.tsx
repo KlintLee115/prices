@@ -56,12 +56,12 @@ function ProfilePage() {
     useEffect(() => {
 
         const fetchUserFeedbacks = async () => {
-            const url = `${URL_Endpoints.BASE_URL}${URL_Endpoints.USER_INFO_ENDPOINT}?email=${SessionInfo.get("Email")}`;
+            const url = `${URL_Endpoints.BACKEND_URL}${URL_Endpoints.USER_INFO_ENDPOINT}?email=${SessionInfo.get("Email")}`;
             return await fetchData<UserInfoType>(url, "fetching user feedbacks");
         };
 
         const fetchUserRelatedPosts = async (userFeedbacks: UserInfoType) => {
-            const endpoint = `${URL_Endpoints.BASE_URL}${URL_Endpoints.GET_POSTS_ENDPOINT}?likes=${userFeedbacks.likes.join(',')}&dislikes=${userFeedbacks.dislikes.join(',')}&posts=${userFeedbacks.posts.join(',')}`;
+            const endpoint = `${URL_Endpoints.BACKEND_URL}${URL_Endpoints.GET_POSTS_ENDPOINT}?likes=${userFeedbacks.likes.join(',')}&dislikes=${userFeedbacks.dislikes.join(',')}&posts=${userFeedbacks.posts.join(',')}`;
             return await fetchData<BaseUserRelatedPostsType>(endpoint, "fetching user related posts");
         };
 
