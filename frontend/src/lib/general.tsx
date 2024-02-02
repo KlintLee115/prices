@@ -1,3 +1,5 @@
+"use client"
+
 import { MarkerType } from "@/components/Maps";
 import { Session } from "next-auth"
 import { Dispatch, SetStateAction } from "react";
