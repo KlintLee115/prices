@@ -1,6 +1,7 @@
 "use client"
 
 import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SessionInfo, URL_Endpoints } from "@/lib/general"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -20,7 +21,7 @@ const fetchData = async function <T>(url: string, errorMessage: string): Promise
     }
 };
 
-export default function ProfilePage() {
+function ProfilePage() {
 
     const router = useRouter()
 
@@ -110,3 +111,7 @@ export default function ProfilePage() {
         />)
     }
 }
+
+export default dynamic(() => Promise.resolve(ProfilePage), {
+    ssr: false,
+})
