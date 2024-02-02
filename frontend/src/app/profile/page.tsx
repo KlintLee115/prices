@@ -52,18 +52,18 @@ export default function ProfilePage() {
         return processedPosts;
     };
 
-    const fetchUserFeedbacks = async () => {
-        const url = `${URL_Endpoints.BASE_URL}${URL_Endpoints.USER_INFO_ENDPOINT}?email=${SessionInfo.get("Email")}`;
-        return await fetchData<UserInfoType>(url, "fetching user feedbacks");
-    };
-
-    const fetchUserRelatedPosts = async (userFeedbacks: UserInfoType) => {
-        const endpoint = `${URL_Endpoints.BASE_URL}${URL_Endpoints.GET_POSTS_ENDPOINT}?likes=${userFeedbacks.likes.join(',')}&dislikes=${userFeedbacks.dislikes.join(',')}&posts=${userFeedbacks.posts.join(',')}`;
-        return await fetchData<BaseUserRelatedPostsType>(endpoint, "fetching user related posts");
-    };
-
-
     useEffect(() => {
+
+        const fetchUserFeedbacks = async () => {
+            const url = `${URL_Endpoints.BASE_URL}${URL_Endpoints.USER_INFO_ENDPOINT}?email=${SessionInfo.get("Email")}`;
+            return await fetchData<UserInfoType>(url, "fetching user feedbacks");
+        };
+
+        const fetchUserRelatedPosts = async (userFeedbacks: UserInfoType) => {
+            const endpoint = `${URL_Endpoints.BASE_URL}${URL_Endpoints.GET_POSTS_ENDPOINT}?likes=${userFeedbacks.likes.join(',')}&dislikes=${userFeedbacks.dislikes.join(',')}&posts=${userFeedbacks.posts.join(',')}`;
+            return await fetchData<BaseUserRelatedPostsType>(endpoint, "fetching user related posts");
+        };
+
         (async () => {
             const userFeedbacks = await fetchUserFeedbacks();
             if (!userFeedbacks) return;
@@ -88,7 +88,7 @@ export default function ProfilePage() {
     return <div className="m-0 ml-80 mr-80">
 
         <div className="border-black border-b-2 text-center pt-2 pb-2 flex gap-6 items-center">
-            <svg onClick={()=>router.back()} width="32px" height="32px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"></path><path fill="#000000" d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"></path></g></svg>
+            <svg onClick={() => router.back()} width="32px" height="32px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"></path><path fill="#000000" d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"></path></g></svg>
             <p>{SessionInfo.get("Email")}</p>
         </div>
         <p className="mt-5 font-bold">Posts</p>
