@@ -3,7 +3,7 @@
 import Maps, { MarkerType } from '@/components/Maps';
 import OverlayForm from '@/components/OverlayForm';
 import SearchItem from '@/components/SearchItem';
-import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SearchItemsProp, SessionInfo, URL_Endpoints } from '@/lib/general';
+import { BasePricesResponseType, FormattedPricesResponseType, PriceCard, SessionInfo, URL_Endpoints } from '@/lib/general';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
@@ -48,56 +48,66 @@ export default function Home() {
       setMapsLoaded(true);
     }
 
-    if (!SessionInfo.get("Email") && session?.user) {
-      SessionInfo.session = session
-    }
+    (async () => {
+      const response = await fetch('/api/send', {
+        method:"POST"
+      })
+
+      console.log(await response.json())
+    })()
 
   }, []);
+
+  if (!SessionInfo.get("Email") && session?.user) {
+    SessionInfo.session = session
+  }
 
   useEffect(() => {
     const email = SessionInfo.get("Email");
 
-    if (email && strLat && strLng) {
+    async function getPricesData(): Promise<Map<number, FormattedPricesResponseType>> {
+      const pricesResponse = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData?${searchParams.toString()}`)
+      const pricesData: { error: string } | BasePricesResponseType[] = await pricesResponse.json()
 
-      (async () => {
+      if (pricesResponse.status !== 200 || !Array.isArray(pricesData)) {
+        throw (pricesData as { error: string }).error
+      }
 
-        const pricesResponse = await fetch(`${URL_Endpoints.BASE_URL}/getPricesData?${searchParams.toString()}`)
-        const pricesData: { error: string } | BasePricesResponseType[] = await pricesResponse.json()
+      const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch(`${URL_Endpoints.BASE_URL}/getUserFeedbacks`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      })).json()
 
-        if (pricesResponse.status !== 200 || !Array.isArray(pricesData)) {
-          throw (pricesData as { error: string }).error
-        }
+      const newMap: Map<number, FormattedPricesResponseType> = new Map();
 
-        const feedback: { feedback: { dislikes: number[], likes: number[] } } = await (await fetch(`${URL_Endpoints.BASE_URL}/getUserFeedbacks`, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email })
-        })).json()
+      pricesData.forEach(item => {
 
-        const newMap: Map<number, FormattedPricesResponseType> = new Map();
+        const isLiked = feedback.feedback.likes.includes(item.id)
+        const isDisliked = feedback.feedback.dislikes.includes(item.id)
 
-        pricesData.forEach(item => {
-
-          const isLiked = feedback.feedback.likes.includes(item.id)
-          const isDisliked = feedback.feedback.dislikes.includes(item.id)
-
-          newMap.set(item.id, {
-            ...item,
-            likes: parseInt(item.likes),
-            dislikes: parseInt(item.dislikes),
-            isLiked: isLiked,
-            isDisliked: isDisliked,
-            price: parseInt(item.price),
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lng),
-          })
+        newMap.set(item.id, {
+          ...item,
+          likes: parseInt(item.likes),
+          dislikes: parseInt(item.dislikes),
+          isLiked: isLiked,
+          isDisliked: isDisliked,
+          price: parseInt(item.price),
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lng),
         })
+      })
 
-        setPrices(newMap)
-      })()
+      return newMap
     }
+
+
+    if (email && strLat && strLng) {
+      getPricesData().then(data => setPrices(data))
+    }
+
   }, [session?.user?.email, searchParams.get('radius'), searchParams.get('sortType'), searchParams.get('lat'), searchParams.get('lng'), searchParams.get('product')])
 
   function ListPrices() {
@@ -135,7 +145,19 @@ export default function Home() {
               <div className='flex justify-evenly mt-[5vh] min-h-[60vh] max-h-[70vh]'>
                 <Maps currMarker={currMarker} setSelectedMarker={setCurrMarker} />
                 <div className='max-h-full max-w-[35vw]'>
-                  <div className='flex flex-col'>
+                  <div className='flex justify-between'>
+                    <h3 className='flex-1'>Rating</h3>
+                    <div className='flex flex-[3] justify-evenly'>
+                      <div className='flex items-center'>
+                        <h3>top: </h3><div className='bg-cyan-300 w-3 h-3'></div>
+                      </div>
+
+                      <div className='flex items-center'>
+                        <h3>bottom: </h3><div className='bg-red-400 w-3 h-3'></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='flex flex-col mt-5'>
                     <h2>Want to contribute?</h2>
                     <h2 className='inline'><button
                       onClick={() => setIsOverlayOn(true)}

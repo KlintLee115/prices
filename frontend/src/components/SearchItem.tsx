@@ -1,7 +1,6 @@
 "use client"
 
-import { SearchItemsProp } from "@/lib/general";
-import { useSession } from "next-auth/react";
+import { SearchItemsProp, SessionInfo } from "@/lib/general";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useEffect, useState } from "react";
@@ -42,8 +41,8 @@ export default function SearchItem({
     const pathName = usePathname()
 
     const geocoder = new google.maps.Geocoder();
-    const { data: session } = useSession()
-    const username = session?.user?.name
+
+    const username = SessionInfo.get("Username")
 
     const locationAutoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const locationInputRef = useRef<HTMLInputElement | null>(null);

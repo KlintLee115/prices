@@ -159,7 +159,7 @@ app.get('/getPricesData', (req: Request, res: Response) => {
                 (6371 * acos(cos(radians($1)) * cos(radians(lat)) * cos(radians(lng) - radians($2)) + sin(radians($1)) * sin(radians(lat)))) AS distance,
                 (likes - dislikes) AS rating
             FROM public.prices
-            ${product ? `WHERE product ILIKE ${product}` : ""}
+            ${product ? `WHERE product ILIKE '%${product}%'` : ""}
         )
         SELECT *
         FROM distances
@@ -172,6 +172,8 @@ app.get('/getPricesData', (req: Request, res: Response) => {
         else {
             query = "SELECT * FROM public.prices"
         }
+
+        console.log(query)
 
         executeQuery(query, values)
     }
@@ -236,7 +238,7 @@ app.patch('/feedback', async (req, res) => {
     }
 })
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 3001, () => {
     console.log('connected')
 })
 

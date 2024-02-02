@@ -1,6 +1,6 @@
 "use client"
 
-import { SessionInfo } from "@/lib/general";
+import { SessionInfo, URL_Endpoints } from "@/lib/general";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
@@ -28,7 +28,7 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
 
         (async () => {
             try {
-                await fetch('http://localhost:3000/insertNewPrice', {
+                await fetch(`${URL_Endpoints.BASE_URL}/insertNewPrice`, {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -76,8 +76,9 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
     }), []
 
     function OverlayForm() {
+        
         return (
-            <form className="flex flex-col gap-[3vh]" onSubmit={formSubmitted}>
+            <form className='flex flex-col gap-[3vh]' onSubmit={formSubmitted}>
                 <p className="text-xl font-bold">Insert a new item</p>
                 <div className="flex justify-between">
                     <label htmlFor="">Location</label>
@@ -116,9 +117,18 @@ export default function Overlay({ isOverlayOn }: { isOverlayOn: boolean }) {
 }
 
 function OverlayFrame({ children }: { children: JSX.Element }) {
-    return <div className="bg-white z-10 h-fit py-[5vh]
+
+    const [isVisible, setIsVisible] = useState(false)
+
+    useEffect(() => {
+        setTimeout(() => {
+            setIsVisible(true)
+        }, 0);
+    })
+
+    return <div className={`bg-white z-10 h-fit py-[5vh]
     fixed top-[10vh] shadow-black shadow-2xl
-    left-0 right-0 mx-auto w-fit px-[5vw]">
+    left-0 right-0 mx-auto w-fit px-[5vw]  transition-all ${isVisible ? 'scale-100' : 'scale-0'}`}>
         {children}
     </div>
 }

@@ -37,9 +37,9 @@ export enum FeedbackType {
 
 
 export class URL_Endpoints {
-    // static BASE_URL = 'http://localhost:3000/prices';
+    static BASE_URL = 'http://localhost:3001';
     // static BASE_URL = 'https://ksportsbackend.onrender.com/prices';
-    static BASE_URL = 'https://pricesbackend.azurewebsites.net/';
+    // static BASE_URL = 'https://pricesbackend.azurewebsites.net';
     static FEEDBACK_ENDPOINT = '/feedback';
     static USER_INFO_ENDPOINT = '/getUserInfo';
     static GET_POSTS_ENDPOINT = '/getPosts';
@@ -72,7 +72,7 @@ export class SessionInfo {
         const username = user.name
         const image = user.image
 
-        document.cookie = `${CookieKeynames.Email}=${email};${CookieKeynames.Username}=${username};${CookieKeynames.Image}=${image}`;
+        document.cookie = `${CookieKeynames.Email} = ${email} ; ${CookieKeynames.Username} = ${username} ; ${CookieKeynames.Image} = ${image}`;
     }
 }
 
@@ -121,6 +121,8 @@ export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedI
     }) {
 
     const { product, price, address, isLiked, isDisliked, likes, dislikes, lat, lng } = prices.get(id) as FormattedPricesResponseType
+
+    const rating = likes - dislikes
 
     const handleFeedback = async (feedbackType: FeedbackType): Promise<number> => {
 
@@ -188,7 +190,9 @@ export function PriceCard({ checkUser, setPrices, currSelectedItemKey: selectedI
                 name: address
             })
         }}
-        className={`border border-black h-fit py-[1vh] px-[3vw] flex ${id === selectedItemKey ? "bg-cyan-100" : "bg-transparent"}`}>
+        className={`border border-black h-fit py-[1vh] px-[3vw] flex 
+        ${rating > 5 ? " bg-cyan-300 " : rating < -5 ? " bg-red-400 " : "bg-transparent"}
+        ${id === selectedItemKey && "border-l-8 border-l-blue-400"}`}>
         <div>
             <h3>Item: {product}</h3>
             <h3>Price: {price}</h3>
